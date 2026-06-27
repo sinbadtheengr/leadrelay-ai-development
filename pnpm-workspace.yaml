@@ -1,0 +1,9 @@
+overrides:
+  hono: 4.12.25
+
+allowBuilds:
+  '@prisma/engines': true
+  esbuild: true
+  msw: false
+  prisma: true
+  sharp: true

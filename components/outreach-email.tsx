@@ -2,18 +2,34 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Check, Copy, Sparkles } from "lucide-react"
+import { Check, Copy, RefreshCw, Sparkles } from "lucide-react"
 
-export function OutreachEmail({ email }: { email: string }) {
+export function OutreachEmail({ leadId, email }: { leadId: string; email: string }) {
+  const [currentEmail, setCurrentEmail] = useState(email)
   const [copied, setCopied] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(email)
+      await navigator.clipboard.writeText(currentEmail)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
       // Clipboard unavailable — silently ignore.
+    }
+  }
+
+  async function regenerate() {
+    setIsGenerating(true)
+    try {
+      const response = await fetch(`/api/leads/${leadId}/outreach`, { method: "POST" })
+      if (!response.ok) throw new Error("Outreach generation failed")
+      const data = (await response.json()) as { email?: string }
+      if (data.email) setCurrentEmail(data.email)
+    } catch {
+      // The server already falls back to mock mode; keep the current email if the request fails.
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -31,13 +47,19 @@ export function OutreachEmail({ email }: { email: string }) {
             </p>
           </div>
         </div>
-        <Button onClick={copy} variant={copied ? "secondary" : "default"} size="sm">
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-          {copied ? "Copied" : "Copy Email"}
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button onClick={regenerate} variant="outline" size="sm" disabled={isGenerating}>
+            <RefreshCw className="h-4 w-4" />
+            {isGenerating ? "Generating" : "Refresh"}
+          </Button>
+          <Button onClick={copy} variant={copied ? "secondary" : "default"} size="sm">
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            {copied ? "Copied" : "Copy Email"}
+          </Button>
+        </div>
       </div>
       <pre className="mt-4 max-h-[420px] overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-4 font-sans text-sm leading-relaxed text-foreground">
-        {email}
+        {currentEmail}
       </pre>
     </div>
   )

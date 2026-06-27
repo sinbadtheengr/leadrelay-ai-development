@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum WebsiteStatus {
+  none
+  outdated
+  modern
+}
+
+enum AutomationFit {
+  High
+  Medium
+  Low
+}
+
+model Lead {
+  id                     String         @id
+  name                   String
+  category               String
+  city                   String
+  address                String
+  phone                  String
+  rating                 Float
+  reviews                Int
+  websiteStatus          WebsiteStatus
+  websiteUrl             String?
+  opportunityScore       Int
+  automationFit          AutomationFit
+  estimatedMonthlyValue  Int
+  outreachReady          Boolean        @default(false)
+  description            String
+  gaps                   Json
+  recommendedServices    Json
+  source                 String         @default("seed")
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  analyses               LeadAnalysis[]
+
+  @@index([city, category])
+  @@index([opportunityScore])
+}
+
+model LeadAnalysis {
+  id                    String        @id @default(cuid())
+  leadId                String
+  lead                  Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  summary               String
+  gaps                  Json
+  recommendedServices   Json
+  opportunityScore      Int
+  automationFit         AutomationFit
+  estimatedMonthlyValue Int
+  rawResponse           Json?
+  source                String        @default("mock")
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([leadId, createdAt])
+}
+
+model SearchRun {
+  id           String   @id @default(cuid())
+  city         String
+  category     String
+  query        String
+  resultCount  Int
+  usedDemoData Boolean  @default(false)
+  source       String   @default("seed")
+  createdAt    DateTime @default(now())
+
+  @@index([city, category, createdAt])
+}

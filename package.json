@@ -6,15 +6,26 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "postinstall": "prisma generate",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:iam": "tsx scripts/prisma-iam.ts",
+    "prisma:iam:url": "tsx scripts/print-iam-database-url.ts",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
+    "@aws-sdk/rds-signer": "^3.1075.0",
     "@base-ui/react": "^1.5.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@vercel/analytics": "1.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
+    "pg": "^8.22.0",
     "react": "^19",
     "react-dom": "^19",
     "shadcn": "^4.8.0",
@@ -24,15 +35,13 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.0",
     "@types/node": "^24",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8.5",
+    "prisma": "^7.8.0",
     "tailwindcss": "^4.2.0",
+    "tsx": "^4.22.4",
     "typescript": "5.7.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "hono": "4.12.25"
-    }
   }
 }

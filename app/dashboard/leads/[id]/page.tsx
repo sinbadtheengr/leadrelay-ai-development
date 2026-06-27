@@ -10,7 +10,8 @@ import {
   AutomationFitBadge,
 } from "@/components/lead-badges"
 import { OutreachEmail } from "@/components/outreach-email"
-import { getLead, leads, buildOutreachEmail } from "@/lib/leads"
+import { getLeadById } from "@/lib/lead-service"
+import { leads, buildOutreachEmail } from "@/lib/leads"
 import {
   ArrowLeft,
   Star,
@@ -32,7 +33,7 @@ export default async function LeadDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const lead = getLead(id)
+  const lead = await getLeadById(id)
   if (!lead) notFound()
 
   const email = buildOutreachEmail(lead)
@@ -140,7 +141,7 @@ export default async function LeadDetailPage({
             {/* AI outreach email */}
             <Card>
               <CardContent className="pt-6">
-                <OutreachEmail email={email} />
+                <OutreachEmail leadId={lead.id} email={email} />
               </CardContent>
             </Card>
           </div>

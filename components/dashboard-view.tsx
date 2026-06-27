@@ -26,23 +26,16 @@ import {
   WebsiteStatusBadge,
   AutomationFitBadge,
 } from "@/components/lead-badges"
-import { leads, SERVICE_CATALOG, CITIES } from "@/lib/leads"
+import { SERVICE_CATALOG, CITIES, type Lead } from "@/lib/leads"
 import { Search, Star, Users, Target, Send, Gauge, ArrowRight } from "lucide-react"
 
-export function DashboardView() {
+export function DashboardView({ initialLeads }: { initialLeads: Lead[] }) {
   const [city, setCity] = useState("Toronto")
   const [category, setCategory] = useState("Beauty Salon")
   const [query, setQuery] = useState({ city: "", category: "" })
-
-  // Show all leads by default; filter once a search is run.
-  const results = useMemo(() => {
-    if (!query.city && !query.category) return leads
-    return leads.filter((lead) => {
-      const cityMatch = !query.city || lead.city === query.city
-      const catMatch = !query.category || lead.category === query.category
-      return cityMatch && catMatch
-    })
-  }, [query])
+  const [results, setResults] = useState(initialLeads)
+  const [isSearching, setIsSearching] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const stats = useMemo(() => {
     const total = results.length
@@ -55,9 +48,28 @@ export function DashboardView() {
     return { total, high, outreachReady, avg }
   }, [results])
 
-  function handleSearch(e: React.FormEvent) {
+  async function handleSearch(e: React.FormEvent) {
     e.preventDefault()
-    setQuery({ city, category })
+    setIsSearching(true)
+    setError(null)
+
+    try {
+      const response = await fetch("/api/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ city, category }),
+      })
+
+      if (!response.ok) throw new Error("Search failed")
+
+      const data = (await response.json()) as { leads?: Lead[] }
+      setResults(data.leads ?? [])
+      setQuery({ city, category })
+    } catch {
+      setError("Search failed. Showing the last available lead list.")
+    } finally {
+      setIsSearching(false)
+    }
   }
 
   const statCards = [
@@ -90,7 +102,7 @@ export function DashboardView() {
           >
             <div className="grid gap-2">
               <Label htmlFor="city">City</Label>
-              <Select value={city} onValueChange={setCity}>
+              <Select value={city} onValueChange={(value) => value && setCity(value)}>
                 <SelectTrigger id="city">
                   <SelectValue placeholder="Select a city" />
                 </SelectTrigger>
@@ -105,7 +117,7 @@ export function DashboardView() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="category">Business Category</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={category} onValueChange={(value) => value && setCategory(value)}>
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
@@ -118,15 +130,21 @@ export function DashboardView() {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="sm:w-auto">
+            <Button type="submit" className="sm:w-auto" disabled={isSearching}>
               <Search className="h-4 w-4" />
-              Find leads
+              {isSearching ? "Searching..." : "Find leads"}
             </Button>
           </form>
           <p className="mt-3 text-xs text-muted-foreground">
-            Try{" "}
-            <span className="font-medium text-foreground">Toronto + Beauty Salon</span> to see
-            example results.
+            {error ? (
+              <span className="text-destructive">{error}</span>
+            ) : (
+              <>
+                Try{" "}
+                <span className="font-medium text-foreground">Toronto + Beauty Salon</span> to see
+                example results. If API keys are missing, demo Toronto leads are used.
+              </>
+            )}
           </p>
         </CardContent>
       </Card>
