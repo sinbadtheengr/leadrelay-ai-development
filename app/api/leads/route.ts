@@ -11,6 +11,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ leads })
   } catch (error) {
     console.error("Unable to list leads.", error)
-    return NextResponse.json({ error: "Unable to list leads." }, { status: 500 })
+    return NextResponse.json({ error: "Unable to list opportunities." }, { status: 500 })
   }
 }

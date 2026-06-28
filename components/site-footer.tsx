@@ -9,7 +9,7 @@ export function SiteFooter() {
           <div className="max-w-xs">
             <Logo />
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              Find local businesses that need websites and AI automation. Built by RelayOps.
+              AI-powered revenue intelligence for agencies selling websites, automation, and growth systems.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
@@ -18,7 +18,7 @@ export function SiteFooter() {
               <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
                 <li><a href="#features" className="hover:text-foreground">Features</a></li>
                 <li><a href="#how-it-works" className="hover:text-foreground">How it works</a></li>
-                <li><Link href="/dashboard" className="hover:text-foreground">Dashboard</Link></li>
+                <li><Link href="/dashboard" className="hover:text-foreground">Command Center</Link></li>
               </ul>
             </div>
             <div>

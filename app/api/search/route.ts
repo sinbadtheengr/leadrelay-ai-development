@@ -11,6 +11,6 @@ export async function POST(request: Request) {
     return NextResponse.json(result)
   } catch (error) {
     console.error("Lead search failed.", error)
-    return NextResponse.json({ error: "Unable to search leads." }, { status: 500 })
+    return NextResponse.json({ error: "Unable to search opportunities." }, { status: 500 })
   }
 }

@@ -1,4 +1,5 @@
-import { getPrisma } from "@/lib/prisma"
+import { getDatabaseUrl, usesIamDatabaseAuth } from "@/lib/aws-rds-iam"
+import { getPrisma, hasDatabaseUrl } from "@/lib/prisma"
 import {
   buildOutreachEmail,
   leads as seededLeads,
@@ -35,6 +36,40 @@ export type SearchResult = {
   }
 }
 
+export type DatabaseStatus = {
+  connected: boolean
+  provider: string
+  authMode: string
+  endpoint: string
+  database: string
+  schema: string
+  leadCount: number
+  searchRunCount: number
+  campaignCount: number
+  analysisCount: number
+  dataMode: "aurora" | "demo"
+  message: string
+  lastVerifiedAt: string
+}
+
+export type CampaignSummary = {
+  id: string
+  name: string
+  city: string
+  category: string
+  targetOffer: string
+  status: string
+  leadCount: number
+  estimatedPipelineValue: number
+  stages: {
+    New: number
+    Qualified: number
+    Outreach: number
+    Won: number
+  }
+  createdAt: string
+}
+
 const globalForDemo = globalThis as unknown as {
   leadRelayDemoLeads?: Map<string, Lead>
 }
@@ -61,8 +96,183 @@ export async function listLeads(filters: { city?: string; category?: string } = 
     })
     return records.map(toLead)
   } catch (error) {
-    console.warn("Falling back to demo leads after database read failed.", error)
+    console.warn("Falling back to local market dataset after database read failed.", error)
     return filterSeedLeads(filters)
+  }
+}
+
+export async function getDashboardDatabaseStatus(): Promise<DatabaseStatus> {
+  const databaseUrl = getDatabaseUrl()
+  const endpoint = databaseUrl?.hostname ?? "Not configured"
+  const database = databaseUrl?.pathname.replace(/^\//, "") || "demo"
+  const schema = databaseUrl?.searchParams.get("schema") ?? "public"
+  const base = {
+    provider: "Amazon Aurora PostgreSQL",
+    authMode: usesIamDatabaseAuth() ? "AWS IAM database auth" : "Password auth",
+    endpoint,
+    database,
+    schema,
+    lastVerifiedAt: new Date().toISOString(),
+  }
+
+  if (!hasDatabaseUrl()) {
+    return {
+      ...base,
+      connected: false,
+      leadCount: seededLeads.length,
+      searchRunCount: 0,
+      campaignCount: 0,
+      analysisCount: 0,
+      dataMode: "demo",
+      message: "Local Market Dataset is active because the data platform is not configured.",
+    }
+  }
+
+  const db = getPrisma()
+  if (!db) {
+    return {
+      ...base,
+      connected: false,
+      leadCount: seededLeads.length,
+      searchRunCount: 0,
+      campaignCount: 0,
+      analysisCount: 0,
+      dataMode: "demo",
+      message: "Data infrastructure is configured, but Prisma could not initialize.",
+    }
+  }
+
+  try {
+    const [leadCount, searchRunCount, campaignCount, analysisCount] = await Promise.all([
+      db.lead.count(),
+      db.searchRun.count(),
+      db.campaign.count(),
+      db.leadAnalysis.count(),
+    ])
+
+    return {
+      ...base,
+      connected: true,
+      leadCount,
+      searchRunCount,
+      campaignCount,
+      analysisCount,
+      dataMode: "aurora",
+      message: "Aurora PostgreSQL is connected. Opportunities, market searches, analyses, and campaigns are retained.",
+    }
+  } catch (error) {
+    console.warn("Unable to verify database status.", error)
+    return {
+      ...base,
+      connected: false,
+      leadCount: seededLeads.length,
+      searchRunCount: 0,
+      campaignCount: 0,
+      analysisCount: 0,
+      dataMode: "demo",
+      message: "Aurora is configured, but the Local Market Dataset is active after a connection error.",
+    }
+  }
+}
+
+export async function listCampaigns(): Promise<CampaignSummary[]> {
+  const db = getPrisma()
+  if (!db) return localMarketCampaigns()
+
+  try {
+    const campaigns = await db.campaign.findMany({
+      include: { leads: true },
+      orderBy: { createdAt: "desc" },
+      take: 4,
+    })
+    if (campaigns.length === 0) return localMarketCampaigns()
+    return campaigns.map((campaign) => ({
+      id: campaign.id,
+      name: campaign.name,
+      city: campaign.city,
+      category: campaign.category,
+      targetOffer: campaign.targetOffer,
+      status: campaign.status,
+      leadCount: campaign.leads.length,
+      estimatedPipelineValue: campaign.estimatedPipelineValue,
+      stages: summarizeStages(campaign.leads.map((lead) => lead.stage)),
+      createdAt: campaign.createdAt.toISOString(),
+    }))
+  } catch (error) {
+    console.warn("Unable to load campaigns; using local market campaign.", error)
+    return localMarketCampaigns()
+  }
+}
+
+export async function createCampaign({
+  name,
+  city,
+  category,
+  leadIds,
+}: {
+  name: string
+  city: string
+  category: string
+  leadIds: string[]
+}): Promise<CampaignSummary> {
+  const uniqueLeadIds = Array.from(new Set(leadIds)).filter(Boolean)
+  const leads = await Promise.all(uniqueLeadIds.map((id) => getLeadById(id)))
+  const validLeads = leads.filter((lead): lead is Lead => Boolean(lead))
+  const estimatedPipelineValue = validLeads.reduce(
+    (sum, lead) => sum + lead.estimatedMonthlyValue,
+    0,
+  )
+  const fallback = {
+    id: `local-${slugify(name || `${category}-${city}`)}`,
+    name: name || `${city} ${category} outreach`,
+    city,
+    category,
+    targetOffer: "Website + AI automation",
+    status: "Active",
+    leadCount: validLeads.length,
+    estimatedPipelineValue,
+    stages: summarizeStages(validLeads.map((_lead, index) => (index === 0 ? "Qualified" : "New"))),
+    createdAt: new Date().toISOString(),
+  }
+
+  const db = getPrisma()
+  if (!db || validLeads.length === 0) return fallback
+
+  try {
+    await upsertLeads(validLeads, validLeads[0]?.source ?? "seed")
+    const campaign = await db.campaign.create({
+      data: {
+        name: fallback.name,
+        city,
+        category,
+        targetOffer: fallback.targetOffer,
+        estimatedPipelineValue,
+        leads: {
+          create: validLeads.map((lead, index) => ({
+            leadId: lead.id,
+            stage: index === 0 ? "Qualified" : "New",
+            position: index,
+          })),
+        },
+      },
+      include: { leads: true },
+    })
+
+    return {
+      id: campaign.id,
+      name: campaign.name,
+      city: campaign.city,
+      category: campaign.category,
+      targetOffer: campaign.targetOffer,
+      status: campaign.status,
+      leadCount: campaign.leads.length,
+      estimatedPipelineValue: campaign.estimatedPipelineValue,
+      stages: summarizeStages(campaign.leads.map((lead) => lead.stage)),
+      createdAt: campaign.createdAt.toISOString(),
+    }
+  } catch (error) {
+    console.warn("Unable to persist campaign; returning local market campaign.", error)
+    return fallback
   }
 }
 
@@ -75,7 +285,7 @@ export async function getLeadById(id: string) {
     const record = await db.lead.findUnique({ where: { id } })
     return record ? toLead(record) : demoLeads().get(id)
   } catch (error) {
-    console.warn("Falling back to demo lead after database lookup failed.", error)
+    console.warn("Falling back to local market lead after database lookup failed.", error)
     return demoLeads().get(id)
   }
 }
@@ -104,7 +314,7 @@ export async function searchLeads(city: string, category: string): Promise<Searc
         return { leads: googleLeads, searchRun }
       }
     } catch (error) {
-      console.warn("Google Places search failed; using demo leads.", error)
+      console.warn("Google Places search failed; using local market dataset.", error)
     }
   }
 
@@ -233,6 +443,45 @@ function filterSeedLeads(filters: { city?: string; category?: string }) {
   return torontoCategory.length > 0
     ? torontoCategory
     : allDemoLeads.filter((lead) => lead.city === "Toronto")
+}
+
+function localMarketCampaigns(): CampaignSummary[] {
+  const priorityLeads = seededLeads.filter((lead) => lead.outreachReady).slice(0, 4)
+  return [
+    {
+      id: "local-toronto-beauty-launch",
+      name: "Toronto local services launch",
+      city: "Toronto",
+      category: "Beauty Salon",
+      targetOffer: "Website + booking automation",
+      status: "Active",
+      leadCount: priorityLeads.length,
+      estimatedPipelineValue: priorityLeads.reduce(
+        (sum, lead) => sum + lead.estimatedMonthlyValue,
+        0,
+      ),
+      stages: {
+        New: 2,
+        Qualified: 1,
+        Outreach: 1,
+        Won: 0,
+      },
+      createdAt: new Date().toISOString(),
+    },
+  ]
+}
+
+function summarizeStages(stages: string[]) {
+  return stages.reduce(
+    (summary, stage) => {
+      if (stage === "Qualified") summary.Qualified += 1
+      else if (stage === "Outreach") summary.Outreach += 1
+      else if (stage === "Won") summary.Won += 1
+      else summary.New += 1
+      return summary
+    },
+    { New: 0, Qualified: 0, Outreach: 0, Won: 0 },
+  )
 }
 
 async function searchGooglePlaces(city: string, category: string) {
@@ -617,6 +866,7 @@ function toLead(record: {
   description: string
   gaps: unknown
   recommendedServices: unknown
+  source?: string
 }): Lead {
   return {
     id: record.id,
@@ -636,6 +886,7 @@ function toLead(record: {
     description: record.description,
     gaps: Array.isArray(record.gaps) ? record.gaps.map(String) : [],
     recommendedServices: normalizeServices(record.recommendedServices, []),
+    source: record.source,
   }
 }
 

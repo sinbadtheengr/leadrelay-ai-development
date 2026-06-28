@@ -1,6 +1,6 @@
 # LeadRelay AI
 
-LeadRelay AI is a full-stack hackathon MVP for agencies and automation consultants. It discovers local businesses, scores their website and automation opportunity, summarizes the business gaps, and generates ready-to-send outreach emails.
+LeadRelay AI is a full-stack B2B product MVP for agencies and automation consultants. It discovers local businesses, scores their website and automation opportunity, summarizes business gaps, generates campaign-ready outreach, and saves opportunities into a revenue pipeline.
 
 The current UI started in v0 and is now backed by Next.js API routes, Prisma ORM, PostgreSQL-compatible models, Google Places search when configured, and OpenAI-powered analysis/outreach when configured.
 
@@ -8,14 +8,47 @@ The current UI started in v0 and is now backed by Next.js API routes, Prisma ORM
 
 LeadRelay AI fits H0 because it turns AI into a practical operator workflow: find a local market, identify overlooked revenue opportunities, and produce a concrete next action. It is demoable without external APIs, but can become live with real Places data, AI analysis, and a managed PostgreSQL database.
 
+For the H0 "Hack the Zero Stack with Vercel v0 and AWS Databases" judging story, the app demonstrates:
+
+- v0-generated frontend upgraded into a full-stack Next.js product.
+- Amazon Aurora PostgreSQL persistence through Prisma ORM.
+- AWS IAM database authentication support for Aurora PostgreSQL.
+- B2B monetization workflow: market discovery, opportunity scoring, AI campaign copy, and saved sales campaigns.
+- Demo-safe fallbacks when Google Places or OpenAI credentials are not present.
+
 ## Stack
 
 - Next.js App Router
 - React 19
 - Prisma ORM
-- PostgreSQL, compatible with AWS Aurora PostgreSQL and Amazon RDS PostgreSQL
+- Amazon Aurora PostgreSQL-compatible database
+- AWS IAM database authentication tokens through `@aws-sdk/rds-signer`
 - Optional Google Places API
 - Optional OpenAI Responses API
+
+## Architecture
+
+```mermaid
+flowchart LR
+  A["v0 / Next.js UI"] --> B["App Router API routes"]
+  B --> C["Lead service layer"]
+  C --> D["Prisma ORM"]
+  D --> E["Amazon Aurora PostgreSQL"]
+  C --> F["Google Places API (optional)"]
+  C --> G["OpenAI Responses API (optional)"]
+  C --> H["Fallback local-market dataset"]
+```
+
+The user-facing Command Center calls `POST /api/search`, `POST /api/campaigns`, and the opportunity detail AI routes. The service layer writes `Lead`, `SearchRun`, `LeadAnalysis`, `Campaign`, and `CampaignLead` rows to Aurora when the database is reachable.
+
+## H0 Hackathon Architecture Notes
+
+- Frontend: Vercel + Next.js App Router with a v0-generated UI refined into a business-facing Command Center.
+- Backend: Next.js API routes power market search, opportunity retrieval, AI analysis, campaign generation, and saved campaign workflows.
+- Database: AWS Aurora PostgreSQL-compatible storage accessed through Prisma ORM, including support for IAM database authentication tokens.
+- Optional APIs: Google Places can provide live market discovery; OpenAI can provide live AI opportunity analysis and campaign copy.
+- Reliable product experience: when optional APIs are missing, LeadRelay uses a fallback local-market dataset and strong generated AI copy so the workflow remains complete.
+- Future architecture: SQS background jobs, S3 exports and reports, RDS Proxy connection management, CloudWatch observability, and CRM integrations.
 
 ## API Routes
 
@@ -24,6 +57,8 @@ LeadRelay AI fits H0 because it turns AI into a practical operator workflow: fin
 - `GET /api/leads/[id]` returns one lead.
 - `POST /api/leads/[id]/analyze` generates and stores lead analysis when a database is available.
 - `POST /api/leads/[id]/outreach` generates an outreach email.
+- `GET /api/campaigns` lists saved campaigns.
+- `POST /api/campaigns` saves the current result set as a campaign pipeline.
 
 ## Environment Variables
 
@@ -68,6 +103,8 @@ The app works without Google Places, OpenAI, or a database.
 If `GOOGLE_PLACES_API_KEY` is missing, searches use realistic seeded Toronto businesses. If `OPENAI_API_KEY` is missing, the app generates strong mock lead analysis and outreach email copy. If `DATABASE_URL` is missing or unavailable, the API routes use in-app demo data instead of Prisma persistence.
 
 This makes the project safe to run during judging, on a laptop, or in a fresh Vercel preview before infrastructure is connected.
+
+The Command Center makes the current mode visible with a **Platform Health** card. Judges can see whether the app is using Aurora rows or the fallback local-market dataset, along with counts for opportunities, market searches, campaigns, and AI analyses.
 
 ## Run Locally
 
@@ -163,6 +200,59 @@ For IAM-only Aurora production migrations, run from a trusted machine with AWS c
 pnpm prisma:iam migrate deploy
 pnpm prisma:iam db seed
 ```
+
+## AWS Database Proof
+
+To prove Aurora PostgreSQL usage during judging:
+
+1. Open the Command Center and point to the **Platform Health** card.
+2. Show the Aurora endpoint, IAM auth mode, and persisted row counts.
+3. Run a search. The app records a `SearchRun` row when Aurora accepts the write.
+4. Click **Save campaign**. The app writes `Campaign` and `CampaignLead` rows.
+5. Open an opportunity and refresh Campaign Builder copy. The app uses OpenAI when configured or mock AI output when not.
+
+Useful local verification commands:
+
+```bash
+pnpm prisma:iam migrate dev
+pnpm prisma:iam db seed
+pnpm dev
+```
+
+For a database sanity check, inspect row counts with Prisma Studio or a SQL client:
+
+```sql
+select count(*) from "Lead";
+select count(*) from "SearchRun";
+select count(*) from "Campaign";
+select count(*) from "CampaignLead";
+```
+
+## Judge Demo Script
+
+1. Start at `/dashboard`.
+2. Point out **Platform Health**: Aurora PostgreSQL, IAM auth, row counts.
+3. Search `Toronto + Beauty Salon`.
+4. Explain that missing Google Places key uses persisted demo leads, while a configured key saves live discovered leads into Aurora.
+5. Click **Save campaign** to create a monetizable sales pipeline.
+6. Open a high-score opportunity.
+7. Show recommended services, estimated monthly value, and Campaign Builder email.
+8. Close by saying the product is an agency revenue cockpit: discover opportunities, save campaigns, and turn gaps into recurring retainers.
+
+## Devpost Screenshot Checklist
+
+Capture these images for submission:
+
+- Architecture diagram: `public/devpost/leadrelay-ai-architecture.png` or `public/devpost/leadrelay-ai-architecture.svg`.
+- Landing page hero showing the LeadRelay AI positioning.
+- Command Center with the **Platform Health** card visible.
+- Search results after `Toronto + Beauty Salon`.
+- Saved campaign pipeline after clicking **Save campaign**.
+- Opportunity detail page showing AI Opportunity Analysis and estimated monthly value.
+- Campaign Builder email panel.
+- AWS RDS/Aurora console showing the `database-1` Aurora PostgreSQL cluster and writer endpoint.
+
+Use browser width around 1440px for Command Center screenshots so the Platform Health card and pipeline panel are visible in one frame.
 
 ## Future Roadmap
 

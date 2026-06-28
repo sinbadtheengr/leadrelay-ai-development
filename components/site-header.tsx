@@ -28,7 +28,7 @@ export function SiteHeader() {
             How it works
           </a>
           <Link href="/dashboard" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            Dashboard
+            Command Center
           </Link>
         </nav>
         <div className="flex items-center gap-3">
@@ -38,7 +38,7 @@ export function SiteHeader() {
           >
             Sign in
           </Link>
-          <Button render={<Link href="/dashboard" />}>Open dashboard</Button>
+          <Button render={<Link href="/dashboard" />}>Open Command Center</Button>
         </div>
       </div>
     </header>

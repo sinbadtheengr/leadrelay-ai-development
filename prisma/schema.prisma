@@ -41,6 +41,7 @@ model Lead {
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
   analyses               LeadAnalysis[]
+  campaignLeads          CampaignLead[]
 
   @@index([city, category])
   @@index([opportunityScore])
@@ -75,4 +76,37 @@ model SearchRun {
   createdAt    DateTime @default(now())
 
   @@index([city, category, createdAt])
+}
+
+model Campaign {
+  id                     String         @id @default(cuid())
+  name                   String
+  city                   String
+  category               String
+  targetOffer            String         @default("Website + AI automation")
+  status                 String         @default("Active")
+  estimatedPipelineValue Int            @default(0)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  leads                  CampaignLead[]
+
+  @@index([status, createdAt])
+  @@index([city, category])
+}
+
+model CampaignLead {
+  id         String   @id @default(cuid())
+  campaignId String
+  leadId     String
+  stage      String   @default("New")
+  position   Int      @default(0)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  lead       Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, leadId])
+  @@index([stage])
+  @@index([leadId])
 }

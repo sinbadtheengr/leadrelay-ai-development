@@ -10,9 +10,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'LeadRelay AI — Find local businesses that need websites & AI automation',
+  title: 'LeadRelay AI — Revenue intelligence for agencies',
   description:
-    'LeadRelay AI by RelayOps helps agencies and automation consultants discover local businesses that need websites, AI automation, online booking, and customer follow-up solutions.',
+    'LeadRelay AI by RelayOps helps agencies and automation consultants find, score, and convert local businesses that need websites, AI automation, online booking, and customer follow-up systems.',
   generator: 'v0.app',
   icons: {
     icon: [

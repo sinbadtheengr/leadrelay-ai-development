@@ -23,6 +23,7 @@ export type Lead = {
     description: string
     monthlyValue: number
   }[]
+  source?: string
 }
 
 export const SERVICE_CATALOG = [

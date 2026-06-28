@@ -41,9 +41,9 @@ export function OutreachEmail({ leadId, email }: { leadId: string; email: string
             <Sparkles className="h-4 w-4" />
           </span>
           <div>
-            <h3 className="text-sm font-medium text-foreground">AI-generated outreach email</h3>
+            <h3 className="text-sm font-medium text-foreground">Campaign Builder</h3>
             <p className="text-xs text-muted-foreground">
-              Personalized to this lead&apos;s gaps and market.
+              Personalized outreach copy based on this opportunity&apos;s gaps and market.
             </p>
           </div>
         </div>

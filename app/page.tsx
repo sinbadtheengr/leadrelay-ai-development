@@ -25,11 +25,11 @@ const features = [
     icon: Gauge,
     title: "Opportunity scoring",
     description:
-      "Every lead is scored 0–100 based on website gaps, automation fit, and revenue potential so you prioritize the best.",
+      "Every opportunity is scored 0–100 based on website gaps, automation fit, and revenue potential so you prioritize the best accounts.",
   },
   {
     icon: MapPin,
-    title: "Website gap analysis",
+    title: "AI Opportunity Analysis",
     description:
       "Instantly see who has no site, an outdated one, or a modern one — and exactly what they're missing.",
   },
@@ -41,15 +41,15 @@ const features = [
   },
   {
     icon: MessageSquareText,
-    title: "AI-generated outreach",
+    title: "Campaign Builder",
     description:
-      "Generate tailored, ready-to-send outreach emails for each lead in one click — personalized to their gaps.",
+      "Generate tailored, ready-to-send campaign emails for each opportunity in one click — personalized to their gaps.",
   },
   {
     icon: ShieldCheck,
-    title: "Outreach-ready signals",
+    title: "Campaign-ready signals",
     description:
-      "Know which leads are verified and ready to contact, with estimated monthly value to focus your pipeline.",
+      "Know which opportunities are verified and ready to contact, with estimated monthly value to focus your pipeline.",
   },
 ]
 
@@ -62,15 +62,15 @@ const steps = [
   },
   {
     step: "02",
-    title: "Review scored leads",
+    title: "Review opportunities",
     description:
       "Each business gets an opportunity score, website status, and automation fit so you can spot high-value targets fast.",
   },
   {
     step: "03",
-    title: "Send AI outreach",
+    title: "Build a campaign",
     description:
-      "Open a lead, review its gap analysis and recommended RelayOps services, then copy a personalized outreach email.",
+      "Open an AI Opportunity Analysis, review recommended RelayOps services, then copy a personalized campaign email.",
   },
 ]
 
@@ -85,19 +85,18 @@ export default function HomePage() {
           <div className="mx-auto max-w-6xl px-4 py-20 text-center sm:px-6 sm:py-28">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted-foreground">
               <Sparkles className="h-4 w-4 text-primary" />
-              AI-powered lead generation for agencies
+              AI-powered revenue intelligence for agencies
             </div>
             <h1 className="mx-auto mt-6 max-w-3xl text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-6xl">
-              Find local businesses that need websites and AI automation.
+              Find, score, and convert local business opportunities.
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground">
-              LeadRelay AI helps agencies and automation consultants discover, score, and reach
-              local businesses that are missing websites, online booking, and customer follow-up
-              systems — then turns them into outreach-ready opportunities.
+              LeadRelay AI gives agencies a revenue intelligence workflow for selling websites,
+              automation, and growth systems to local businesses with weak digital infrastructure.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button render={<Link href="/dashboard" />} size="lg">
-                Open the dashboard
+                Open Command Center
                 <ArrowRight className="h-4 w-4" />
               </Button>
               <Button render={<a href="#how-it-works" />} size="lg" variant="outline">
@@ -124,8 +123,8 @@ export default function HomePage() {
                 Everything you need to fill your pipeline
               </h2>
               <p className="mt-4 text-pretty text-muted-foreground">
-                From discovery to outreach, LeadRelay AI gives consultants a complete workflow for
-                finding and winning local business clients.
+                From market search to campaign copy, LeadRelay AI gives consultants a complete
+                workflow for finding and winning local business clients.
               </p>
             </div>
             <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -176,7 +175,7 @@ export default function HomePage() {
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
             <div className="rounded-2xl border border-border bg-primary px-6 py-14 text-center text-primary-foreground sm:px-12">
               <h2 className="mx-auto max-w-2xl text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-                Start discovering high-opportunity leads today
+                Start building a higher-value opportunity pipeline
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-pretty leading-relaxed text-primary-foreground/80">
                 Search your first market in seconds and see which local businesses are ready for
@@ -184,7 +183,7 @@ export default function HomePage() {
               </p>
               <div className="mt-8 flex justify-center">
                 <Button render={<Link href="/dashboard" />} size="lg" variant="secondary">
-                  Open the dashboard
+                  Open Command Center
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>

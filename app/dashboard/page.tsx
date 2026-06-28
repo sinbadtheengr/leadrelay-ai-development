@@ -1,15 +1,23 @@
 import { DashboardShell } from "@/components/dashboard-shell"
 import { DashboardView } from "@/components/dashboard-view"
-import { listLeads } from "@/lib/lead-service"
+import { getDashboardDatabaseStatus, listCampaigns, listLeads } from "@/lib/lead-service"
 
 export const dynamic = "force-dynamic"
 
 export default async function DashboardPage() {
-  const leads = await listLeads()
+  const [leads, databaseStatus, campaigns] = await Promise.all([
+    listLeads(),
+    getDashboardDatabaseStatus(),
+    listCampaigns(),
+  ])
 
   return (
     <DashboardShell>
-      <DashboardView initialLeads={leads} />
+      <DashboardView
+        initialLeads={leads}
+        initialDatabaseStatus={databaseStatus}
+        initialCampaigns={campaigns}
+      />
     </DashboardShell>
   )
 }

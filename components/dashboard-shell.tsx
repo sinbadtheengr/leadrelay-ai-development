@@ -10,7 +10,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-6">
             <Logo />
             <span className="hidden rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground sm:inline">
-              Dashboard
+              Revenue Pipeline
             </span>
           </div>
           <div className="flex items-center gap-3">

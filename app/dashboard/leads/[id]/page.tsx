@@ -48,7 +48,7 @@ export default async function LeadDetailPage({
           className="mb-4 -ml-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to leads
+          Back to opportunities
         </Button>
 
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -95,10 +95,10 @@ export default async function LeadDetailPage({
               </CardContent>
             </Card>
 
-            {/* Website gap analysis */}
+            {/* AI opportunity analysis */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Website gap analysis</CardTitle>
+                <CardTitle className="text-base">AI Opportunity Analysis</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
@@ -138,7 +138,7 @@ export default async function LeadDetailPage({
               </CardContent>
             </Card>
 
-            {/* AI outreach email */}
+            {/* Campaign Builder */}
             <Card>
               <CardContent className="pt-6">
                 <OutreachEmail leadId={lead.id} email={email} />
@@ -200,8 +200,8 @@ export default async function LeadDetailPage({
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground">
                   {lead.outreachReady
-                    ? "This lead is verified and ready for outreach."
-                    : "This lead needs more research before outreach."}
+                    ? "This opportunity is verified and ready for campaign outreach."
+                    : "This opportunity needs more market research before campaign outreach."}
                 </p>
               </CardContent>
             </Card>
