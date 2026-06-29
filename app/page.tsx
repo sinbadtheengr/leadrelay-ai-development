@@ -11,7 +11,7 @@ import {
   CalendarCheck,
   MessageSquareText,
   ShieldCheck,
-  Star,
+  Database,
 } from "lucide-react"
 
 const features = [
@@ -105,11 +105,11 @@ export default function HomePage() {
             </div>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
-                <Star className="h-4 w-4 fill-primary text-primary" />
-                Trusted by 1,200+ agencies
+                <Database className="h-4 w-4 text-primary" />
+                Aurora PostgreSQL-backed
               </span>
-              <span>No credit card required</span>
-              <span>Built by RelayOps</span>
+              <span>Prisma-powered API routes</span>
+              <span>Optional AI and Places providers</span>
             </div>
           </div>
         </section>

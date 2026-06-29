@@ -55,7 +55,7 @@ export function createIamPgPool(databaseUrl = getRequiredDatabaseUrl()) {
     ssl: { rejectUnauthorized: false },
     max: Number(process.env.DATABASE_POOL_MAX ?? 5),
     idleTimeoutMillis: 30_000,
-    connectionTimeoutMillis: 10_000,
+    connectionTimeoutMillis: Number(process.env.DATABASE_CONNECTION_TIMEOUT_MS ?? 45_000),
     options: schema ? `-c search_path=${schema}` : undefined,
     password: async () => generateIamDatabaseToken(databaseUrl),
   } as PoolConfig

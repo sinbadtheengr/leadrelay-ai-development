@@ -122,6 +122,12 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+For a Windows presentation machine, follow [WINDOWS_DEMO_SETUP.md](WINDOWS_DEMO_SETUP.md). It includes a reliable Local Market Dataset path, an Aurora IAM path, and a preflight command:
+
+```bash
+pnpm demo:preflight
+```
+
 To use password-based PostgreSQL locally or on AWS, set `DATABASE_URL`, then run:
 
 ```bash
@@ -243,7 +249,7 @@ select count(*) from "CampaignLead";
 
 Capture these images for submission:
 
-- Architecture diagram: `public/devpost/leadrelay-ai-architecture.png` or `public/devpost/leadrelay-ai-architecture.svg`.
+- Architecture diagram: `public/devpost/leadrelay-architecture.png` or `public/devpost/leadrelay-architecture.svg`.
 - Landing page hero showing the LeadRelay AI positioning.
 - Command Center with the **Platform Health** card visible.
 - Search results after `Toronto + Beauty Salon`.

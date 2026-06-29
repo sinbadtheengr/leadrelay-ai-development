@@ -468,7 +468,7 @@ export function DashboardView({
 
 function sourceLabel(source: string) {
   if (source === "google-places") return "Google Places"
-  if (source === "seed") return "Local Market Dataset"
+  if (source === "seed") return "Market Dataset"
   return source
 }
 

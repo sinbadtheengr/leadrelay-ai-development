@@ -32,7 +32,7 @@ export type SearchResult = {
     query: string
     resultCount: number
     usedDemoData: boolean
-    source: "google-places" | "seed"
+    source: "google-places" | "aurora-seed" | "seed"
   }
 }
 
@@ -72,6 +72,7 @@ export type CampaignSummary = {
 
 const globalForDemo = globalThis as unknown as {
   leadRelayDemoLeads?: Map<string, Lead>
+  leadRelaySeedDataEnsured?: boolean
 }
 
 function demoLeads() {
@@ -318,6 +319,35 @@ export async function searchLeads(city: string, category: string): Promise<Searc
     }
   }
 
+  if (db) {
+    try {
+      await ensureSeedData()
+      const records = await db.lead.findMany({
+        where: {
+          city: normalizedCity,
+          category: normalizedCategory,
+        },
+        orderBy: [{ opportunityScore: "desc" }, { reviews: "desc" }],
+      })
+
+      if (records.length > 0) {
+        const leads = records.map(toLead)
+        const searchRun = await recordSearchRun({
+          city: normalizedCity,
+          category: normalizedCategory,
+          query,
+          resultCount: leads.length,
+          usedDemoData: false,
+          source: "aurora-seed",
+        })
+
+        return { leads, searchRun }
+      }
+    } catch (error) {
+      console.warn("Aurora market search failed; using local market dataset.", error)
+    }
+  }
+
   const fallbackLeads = filterSeedLeads({ city: normalizedCity, category: normalizedCategory })
   const searchRun = await recordSearchRun({
     city: normalizedCity,
@@ -393,11 +423,10 @@ export async function generateOutreach(leadId: string) {
 async function ensureSeedData() {
   const db = getPrisma()
   if (!db) return
-
-  const count = await db.lead.count()
-  if (count > 0) return
+  if (globalForDemo.leadRelaySeedDataEnsured) return
 
   await upsertLeads(seededLeads, "seed")
+  globalForDemo.leadRelaySeedDataEnsured = true
 }
 
 async function upsertLeads(leads: Lead[], source: string) {

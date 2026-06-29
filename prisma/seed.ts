@@ -71,8 +71,39 @@ async function main() {
     })
   }
 
-  console.log(`Seeded ${leads.length} LeadRelay demo leads.`)
-  console.log(`Seeded ${campaignLeads.length} campaign pipeline leads.`)
+  const analysisLeads = leads
+    .filter((lead) => lead.city === "Toronto" && lead.category === "Beauty Salon")
+    .slice(0, 6)
+
+  for (const lead of analysisLeads) {
+    await prisma.leadAnalysis.upsert({
+      where: { id: `seed-analysis-${lead.id}` },
+      create: {
+        id: `seed-analysis-${lead.id}`,
+        leadId: lead.id,
+        summary: `${lead.name} is a strong fit for a website, booking, and automation package because the business has visible demand, clear digital gaps, and recurring appointment revenue potential.`,
+        gaps: lead.gaps,
+        recommendedServices: lead.recommendedServices,
+        opportunityScore: lead.opportunityScore,
+        automationFit: lead.automationFit,
+        estimatedMonthlyValue: lead.estimatedMonthlyValue,
+        source: "seeded-ai",
+      },
+      update: {
+        summary: `${lead.name} is a strong fit for a website, booking, and automation package because the business has visible demand, clear digital gaps, and recurring appointment revenue potential.`,
+        gaps: lead.gaps,
+        recommendedServices: lead.recommendedServices,
+        opportunityScore: lead.opportunityScore,
+        automationFit: lead.automationFit,
+        estimatedMonthlyValue: lead.estimatedMonthlyValue,
+        source: "seeded-ai",
+      },
+    })
+  }
+
+  console.log(`Seeded ${leads.length} LeadRelay market opportunities.`)
+  console.log(`Seeded ${campaignLeads.length} campaign pipeline opportunities.`)
+  console.log(`Seeded ${analysisLeads.length} AI opportunity analyses.`)
 }
 
 main()
